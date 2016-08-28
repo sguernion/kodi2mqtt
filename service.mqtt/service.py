@@ -42,15 +42,16 @@ def publish(suffix,val,more):
 #
 def setplaystate(state,detail):
     global activeplayerid,activeplayertype
+    name = __addon__.getSetting("mqttOSMCname")
     if state==1:
         res=sendrpc("Player.GetActivePlayers",{})
         activeplayerid=res["result"][0]["playerid"]        
         activeplayertype=res["result"][0]["type"]
         res=sendrpc("Player.GetProperties",{"playerid":activeplayerid,"properties":["speed","currentsubtitle","currentaudiostream","repeat","subtitleenabled"]})
-        publish("playbackstate",state,{"kodi_state":detail,"kodi_playbackdetails":res["result"],"kodi_playerid":activeplayerid,"kodi_playertype":activeplayertype})
+        publish("playbackstate",state,{"kodi_state":detail,"kodi_playbackdetails":res["result"],"kodi_playerid":activeplayerid,"kodi_playertype":activeplayertype,"name":name})
         publishdetails()
     else:
-        publish("playbackstate",state,{"kodi_state":detail,"kodi_playerid":activeplayerid,"kodi_playertype":activeplayertype})
+        publish("playbackstate",state,{"kodi_state":detail,"kodi_playerid":activeplayerid,"kodi_playertype":activeplayertype,"name":name})
 
 def convtime(ts):
     return("%02d:%02d:%02d" % (ts/3600,(ts/60)%60,ts%60))
@@ -70,7 +71,7 @@ def publishprogress():
         progress=(pt*100)/tt
     else:
         progress=0
-    state={"kodi_time":convtime(pt),"kodi_totaltime":convtime(tt)}
+    state={"kodi_time":convtime(pt),"kodi_totaltime":convtime(tt),"name":__addon__.getSetting("mqttOSMCname")}
     publish("progress",round(progress,1),state)
 
 #
@@ -84,7 +85,7 @@ def publishdetails():
     res=sendrpc("Player.GetItem",{"playerid":activeplayerid,"properties":["title","streamdetails","file","thumbnail","fanart"]})
     if "result" in res:
         newtitle=res["result"]["item"]["title"]
-        newdetail={"kodi_details":res["result"]["item"]}
+        newdetail={"kodi_details":res["result"]["item"],"name":__addon__.getSetting("mqttOSMCname")}
         if newtitle!=lasttitle or newdetail!=lastdetail:
             lasttitle=newtitle
             lastdetail=newdetail
